@@ -14,11 +14,11 @@ def index():
 
 @sched_bp.route("/add", methods=["POST"])
 def add():
-    resp = requests.post(SCHEDULER_URL + "/sched", data=request.data)
+    resp = requests.post(SCHEDULER_URL + "/add", data=request.data)
     return resp.content
 
 
 @sched_bp.route("/list", methods=["GET"])
 def list():
-    resp = requests.get(SCHEDULER_URL + "/jobs")
+    resp = requests.get(SCHEDULER_URL + "/list")
     return resp.content
