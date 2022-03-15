@@ -1,4 +1,4 @@
-from flask import Flask
+from fastapi import FastAPI
 import pymongo
 
 
@@ -6,14 +6,12 @@ mongo_client = pymongo.MongoClient("mongodb://192.168.1.100:27017")
 
 
 def create_app():
-    app = Flask(__name__)
+    app = FastAPI()
 
-    from .blueprints.main import main_bp as main_blueprint
-    from .blueprints.database import data_bp as database_blueprint
-    from .blueprints.scheduler import sched_bp as scheduler_blueprint
+    from .routers import main, scheduler, database
 
-    app.register_blueprint(main_blueprint)
-    app.register_blueprint(database_blueprint, url_prefix="/database")
-    app.register_blueprint(scheduler_blueprint, url_prefix="/scheduler")
+    app.include_router(main.router)
+    app.include_router(scheduler.router, prefix="/scheduler")
+    app.include_router(database.router, prefix="/database")
 
     return app
