@@ -75,7 +75,8 @@ def insert_many_into_collection(database_name:str, collection_name:str, data:lis
         return HTTPException(status_code=404, detail="Database/collection not found")
 
     rtn = col.insert_many(data)
-    return responseModels.ListResponse(content=rtn.inserted_ids, message=f"data inserted into {database_name}/{collection_name}")
+    content = [str(i) for i in rtn.inserted_ids]
+    return responseModels.ListResponse(content=content, message=f"data inserted into {database_name}/{collection_name}")
 
 
 @router.post("/{database_name}/{collection_name}/delete/one", response_model=responseModels.Response)
