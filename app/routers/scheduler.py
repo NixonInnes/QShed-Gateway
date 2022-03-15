@@ -9,7 +9,7 @@ router = APIRouter()
 SCHEDULER_URL = "http://localhost:5100"
 
 
-@router.put("/add", response_model=StrResponse)
+@router.post("/add", response_model=StrResponse)
 async def add_schedule(schedule: Schedule):
     async with httpx.AsyncClient() as client:
         resp = await client.post(SCHEDULER_URL + "/add", data=schedule.json())

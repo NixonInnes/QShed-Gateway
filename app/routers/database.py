@@ -55,7 +55,7 @@ def get_limited_collection(database_name:str, collection_name:str, limit:int, re
     return responseModels.JSONResponse(content=data, message=f"{database_name}/{collection_name} content (limit={limit})")
 
 
-@router.post("/{database_name}/{collection_name}/insert", response_model=responseModels.DictResponse)
+@router.post("/{database_name}/{collection_name}/insert", response_model=responseModels.StrResponse)
 def insert_into_collection(database_name:str, collection_name:str, data:dict):
     try:
         db = mongo_client[database_name]
@@ -63,7 +63,7 @@ def insert_into_collection(database_name:str, collection_name:str, data:dict):
     except:
         return HTTPException(status_code=404, detail="Database/collection not found")
     rtn = col.insert_one(data)
-    return responseModels.StrResponse(content=rtn.inserted_id, message=f"data inserted into {database_name}/{collection_name}")
+    return responseModels.StrResponse(content=str(rtn.inserted_id), message=f"data inserted into {database_name}/{collection_name}")
 
 
 @router.post("/{database_name}/{collection_name}/insert/many", response_model=responseModels.ListResponse)
