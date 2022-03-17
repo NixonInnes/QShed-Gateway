@@ -23,7 +23,7 @@ def create_database(database_name:str):
 @router.get("/list", response_model=responseModels.ListResponse)
 def list_databases():
     database_names:List[str] = mongo_client.list_database_names()
-    return responseModels.ListResponse(content=database_names, message="databases created")
+    return responseModels.ListResponse(content=database_names)
 
 
 @router.get("/{database_name}/list", response_model=responseModels.ListResponse)
@@ -34,7 +34,7 @@ def list_collections(database_name:str):
         return HTTPException(status_code=404, detail="Database not found")
 
     collection_names = db.list_collection_names()
-    return responseModels.ListResponse(content=collection_names, message=f"{database_name} collections")
+    return responseModels.ListResponse(content=collection_names)
 
 
 @router.get("/{database_name}/{collection_name}/get", response_model=responseModels.JSONResponse)
