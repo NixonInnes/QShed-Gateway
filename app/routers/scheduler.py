@@ -2,7 +2,11 @@ import httpx
 from fastapi import APIRouter
 
 from qshed.client.models.data import Schedule
-from qshed.client.models.response import ScheduleResponse, SchedulesResponse, StrResponse
+from qshed.client.models.response import (
+    ScheduleResponse,
+    SchedulesResponse,
+    StrResponse,
+)
 
 from config import Config
 
@@ -18,7 +22,7 @@ async def add_schedule(schedule: Schedule):
 
 
 @router.get("/get/{job_id}", response_model=ScheduleResponse)
-async def get_schedule(job_id:str):
+async def get_schedule(job_id: str):
     async with httpx.AsyncClient() as client:
         resp = await client.get(Config.SCHEDULE_URL + f"/get/{job_id}")
     return ScheduleResponse(content=resp.content)
