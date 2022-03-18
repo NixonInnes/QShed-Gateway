@@ -102,7 +102,7 @@ def insert_many_into_collection(database_name: str, collection_name: str, data: 
 
 @router.post(
     "/{database_name}/{collection_name}/delete/one",
-    response_model=responseModels.Response,
+    response_model=responseModels.BoolResponse,
 )
 def delete_one_from_collection(
     database_name: str, collection_name: str, query: MongoQuery
@@ -113,8 +113,9 @@ def delete_one_from_collection(
     except:
         return HTTPException(status_code=404, detail="Database/collection not found")
 
-    col.delete_one(query)
-    return responseModels.Response(
+    col.delete_one(query.dict())
+    return responseModels.BoolResponse(
+        content=True,
         message=f"1 document deleted from {database_name}/{collection_name}"
     )
 
