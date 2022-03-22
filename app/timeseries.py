@@ -7,7 +7,6 @@ from . import influx_client
 
 class Timeseries:
     def __init__(self, name):
-        print(Config.INFLUX_URL)
         self.name = name
         self.__write_api = influx_client.write_api(write_options=SYNCHRONOUS)
         self.__query_api = influx_client.query_api()
@@ -46,10 +45,21 @@ class Timeseries:
         if not time:
             time = datetime.now()
         self.__write_api.write(
-            bucket,
-            org,
+            Config.INFLUX_BUCKET,
+            Config.INFLUX_ORG,
             [{"measurement": self.name, "fields": {"v": value}, "time": time}],
         )
+
+    def add_points(self, df):
+        df = df.iloc[:,[0]].copy()
+        df.columns = ["v"]
+        print(type(df))
+        print(df)
+        print(df.index)
+        self.__write_api.write(
+            Config.INFLUX_BUCKET,
+            Config.INFLUX_ORG, 
+            df, data_frame_measurement_name=self.name)
 
     def get_points(self, start=timedelta(days=-1), end=None):
         if not end:
