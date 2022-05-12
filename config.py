@@ -3,7 +3,7 @@ import os
 
 class Config:
     MONGO_URL = "mongodb://" + os.environ.get("MONGO_URL", "192.168.1.1:27017")
-    SCHEDULER_URL = os.environ.get("SCHEDULER_URL", "http://192.168.1.1:5100")
+    SCHEDULER_URL = os.environ.get("SCHEDULER_URL", "http://localhost:4500")
     INFLUX_URL = os.environ.get("INFLUX_URL", "192.168.1.1:8086")
     INFLUX_BUCKET = os.environ.get("INFLUX_BUCKET", "")
     INFLUX_ORG = os.environ.get("INFLUX_ORG", "")
