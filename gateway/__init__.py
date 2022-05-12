@@ -14,8 +14,7 @@ if os.path.exists(dotenv_path):
         logger.warn(f"{e}\nUnable to load environment file: {dotenv_path}")
 
 
-from app import create_app
+from .app import create_app
 
 
 app = create_app()
-
