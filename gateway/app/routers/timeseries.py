@@ -27,7 +27,6 @@ def get_tag(tag_name: str, start: str, end: str):
 def set_tag_values(tag_name: str, dataFrame: DataFrameModel):
     ts = Timeseries(tag_name)
     df = dataFrame.parse()
-    print(df.head())
     ts.add_points(df)
     return StrResponse(content="ok")
 

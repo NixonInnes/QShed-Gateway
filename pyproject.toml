@@ -12,6 +12,7 @@ uvicorn = "^0.17.6"
 influxdb-client = "^1.28.0"
 httpx = "^0.22.0"
 qshed-client = {path = "packages/qshed_client-0.1.0-py3-none-any.whl"}
+SQLAlchemy = "^1.4.36"
 
 [tool.poetry.dev-dependencies]
 
