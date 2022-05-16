@@ -14,6 +14,7 @@ class Entity(Base):
 
     name = Column(String, index=True)
     data = Column(String)
+    type = Column(Integer, default=0)
 
     parent_id = Column(Integer, ForeignKey("sql_entity.id"))
     children = relationship("Entity", backref=backref("parent", remote_side=[id]))
@@ -27,7 +28,8 @@ class Entity(Base):
             {
                 "id": self.id,
                 "name": self.name,
-                "data": self.data,
+                "data_": self.data,
+                "type": self.type,
                 "parent": self.parent.id if self.parent else None,
                 "children": [child.id for child in self.children]
             }

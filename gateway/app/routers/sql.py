@@ -14,20 +14,20 @@ router = APIRouter()
 def get_sql_entity(id:int):
     entity = sql_session.query(Entity).get(id)
     if entity is None:
-        return responseModels.JSONResponse(ok=False, message="id not found")
+        return responseModels.JSONResponse(ok=False, content="", message="id not found")
     return responseModels.JSONResponse(content=entity.json())
 
 
 @router.post("/entity/create", response_model=responseModels.JSONResponse)
 def create_sql_entity(data: dict):
-    print(data)
     try:
         entity = Entity(
             name=data["name"], 
-            data=str(data["data"])  # Converted to string
+            data=str(data["data"]),  # Converted to string
+            type=int(data["type"])
         )
     except:
-        return responseModels.JSONResponse(ok=False, message="name and/or data not defined")
+        return responseModels.JSONResponse(ok=False, content="", message="name and/or data not defined")
     if "parent" in data:
         try:
             entity.parent = sql_session.query(Entity).get(data["parent"])
@@ -46,6 +46,7 @@ def create_sql_entity(data: dict):
             except:
                 return responseModels.JSONResponse(
                     ok=False,
+                    content="",
                     message=f"unable to find child entity with id: {child}"
                 )
     sql_session.add(entity)
@@ -54,3 +55,9 @@ def create_sql_entity(data: dict):
         content=entity.json(), 
         message=f"created new Entity with id: {entity.id}"
     )
+
+
+@router.get("/entity/roots", response_model=responseModels.IntListResponse)
+def get_sql_entity_roots():
+    roots = Entity.get_roots()
+    return responseModels.IntListResponse(content=roots)

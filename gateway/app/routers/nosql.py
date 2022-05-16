@@ -20,13 +20,13 @@ def create_database(database_name: str):
     return responseModels.StrResponse(content=database_name, message="database created")
 
 
-@router.get("/list", response_model=responseModels.ListResponse)
+@router.get("/list", response_model=responseModels.StrListResponse)
 def list_databases():
     database_names: List[str] = mongo_client.list_database_names()
     return responseModels.ListResponse(content=database_names)
 
 
-@router.get("/{database_name}/list", response_model=responseModels.ListResponse)
+@router.get("/{database_name}/list", response_model=responseModels.StrListResponse)
 def list_collections(database_name: str):
     try:
         db = mongo_client[database_name]
@@ -84,7 +84,7 @@ def insert_into_collection(database_name: str, collection_name: str, data: dict)
 
 @router.post(
     "/{database_name}/{collection_name}/insert/many",
-    response_model=responseModels.ListResponse,
+    response_model=responseModels.StrListResponse,
 )
 def insert_many_into_collection(database_name: str, collection_name: str, data: list):
     try:
