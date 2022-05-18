@@ -732,7 +732,7 @@ pyyaml = [
     {file = "PyYAML-6.0.tar.gz", hash = "sha256:68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2"},
 ]
 qshed-client = [
-    {file = "qshed_client-0.1.1-py3-none-any.whl", hash = "sha256:516dbb7b98f5cb80eae2417f71898368bff4263cd72608d512a1730d05c53ed4"},
+    {file = "qshed_client-0.1.1-py3-none-any.whl", hash = "sha256:1d67e978a41f2188889daf3effae5c7396939ad439b4cee42b4a0673df51b47d"},
 ]
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},

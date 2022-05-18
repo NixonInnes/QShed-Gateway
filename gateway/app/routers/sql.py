@@ -18,6 +18,18 @@ def get_sql_entity(id:int):
     return responseModels.JSONResponse(content=entity.json())
 
 
+@router.get("/entity/all", response_model=responseModels.JSONResponse)
+def get_all_sql_entities():
+    content = json.dumps([entity.dict() for entity in sql_session.query(Entity).all()])
+    return responseModels.JSONResponse(content=content)
+
+
+@router.get("/entity/roots", response_model=responseModels.JSONResponse)
+def get_sql_entity_roots():
+    content = json.dumps([entity.dict() for entity in Entity.get_roots()])
+    return responseModels.JSONResponse(content=content)
+
+
 @router.post("/entity/create", response_model=responseModels.JSONResponse)
 def create_sql_entity(data: dict):
     try:
@@ -57,7 +69,3 @@ def create_sql_entity(data: dict):
     )
 
 
-@router.get("/entity/roots", response_model=responseModels.IntListResponse)
-def get_sql_entity_roots():
-    roots = Entity.get_roots()
-    return responseModels.IntListResponse(content=roots)

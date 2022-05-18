@@ -19,21 +19,30 @@ class Entity(Base):
     parent_id = Column(Integer, ForeignKey("sql_entity.id"))
     children = relationship("Entity", backref=backref("parent", remote_side=[id]))
 
+    @property
+    def display_name(self):
+        if self.parent:
+            return f"{self.parent.name}:{self.name}"
+        return self.name
+
     @classmethod
     def get_roots(cls):
         return sql_session.query(cls).filter(cls.parent==None).all()
 
-    def json(self):
-        return json.dumps(
-            {
-                "id": self.id,
-                "name": self.name,
-                "data_": self.data,
-                "type": self.type,
-                "parent": self.parent.id if self.parent else None,
-                "children": [child.id for child in self.children]
-            }
+    def dict(self):
+        return dict(
+            id=self.id,
+            name=self.name,
+            display_name=self.display_name,
+            data_=self.data,
+            type=self.type,
+            parent=self.parent.id if self.parent else None,
+            children=[child.id for child in self.children]
         )
+
+    def json(self):
+        return json.dumps(self.dict())
+
 
 
 Base.metadata.create_all(sql_engine)
