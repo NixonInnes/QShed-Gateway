@@ -5,7 +5,7 @@ from config import Config
 from . import influx_client
 
 
-class Timeseries:
+class TimeseriesQuery:
     def __init__(self, name):
         self.name = name
         self.__write_api = influx_client.write_api(write_options=SYNCHRONOUS)
@@ -36,10 +36,12 @@ class Timeseries:
     def __parse_influx_table(self, df, squeeze=True):
         if len(df) < 1:
             return df
-        df.drop(["result", "table"], axis=1, inplace=True)
-        df.rename(columns={"_time": "time", "v": self.name}, inplace=True)
-        df.set_index("time", inplace=True)
-        return df
+        return (
+            df
+            .drop(["result", "table"], axis=1)
+            .rename(columns={"_time": "time", "v": self.name})
+            .set_index("time")
+        )
 
     def add_point(self, value, time=None):
         if not time:
@@ -53,9 +55,6 @@ class Timeseries:
     def add_points(self, df):
         df = df.iloc[:,[0]].copy()
         df.columns = ["v"]
-        print(type(df))
-        print(df)
-        print(df.index)
         self.__write_api.write(
             Config.INFLUX_BUCKET,
             Config.INFLUX_ORG, 

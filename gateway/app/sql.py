@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship, backref
 
 from . import sql_engine, sql_session
+from .timeseries import TimeseriesQuery
 
 
 Base = declarative_base()
@@ -43,6 +44,24 @@ class Entity(Base):
     def json(self):
         return json.dumps(self.dict())
 
+
+class TimeseriesRecord(Base):
+    __tablename__ = "timeseries_record"
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String, index=True)
+
+    def get(self):
+        return TimeseriesQuery(self.name)
+
+    def dict(self):
+        return dict(
+            id=self.id,
+            name=self.name
+        )
+
+    def json(self):
+        return json.dumps(self.dict())
 
 
 Base.metadata.create_all(sql_engine)

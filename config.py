@@ -13,4 +13,4 @@ class Config:
 
     SQL_ADDRESS = os.environ.get("SQL_ADDRESS", "sqlite:///database.sqlite")
 
-    TIME_FORMAT = "%y/%m/%d %H:%M:%S"
+    TIME_FORMAT = "%Y/%m/%d %H:%M:%S"
