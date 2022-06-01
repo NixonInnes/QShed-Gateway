@@ -10,8 +10,8 @@ import qshed.client.models.response as responseModels
 
 from config import Config
 from gateway.app import influx_client, sql_session
-from gateway.app.timeseries import TimeseriesQuery
-import gateway.app.sql as sqlModels
+from gateway.app.queries import TimeseriesQuery
+import gateway.app.models as sqlModels
 
 
 router = APIRouter()

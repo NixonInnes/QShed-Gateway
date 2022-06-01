@@ -4,34 +4,34 @@ from fastapi import APIRouter, HTTPException, Request
 
 from qshed.client.models import response as responseModels
 
-from .. import sql_session
-from ..sql import Entity
+from gateway.app import sql_session
+from gateway.app.models import Entity
 
 
 router = APIRouter()
 
-@router.get("/entity/get/{id}", response_model=responseModels.JSONResponse)
-def get_sql_entity(id:int):
+@router.get("/get/{id}", response_model=responseModels.JSONResponse)
+def get(id:int):
     entity = sql_session.query(Entity).get(id)
     if entity is None:
         return responseModels.JSONResponse(ok=False, content="", message="id not found")
     return responseModels.JSONResponse(content=entity.json())
 
 
-@router.get("/entity/all", response_model=responseModels.JSONResponse)
-def get_all_sql_entities():
+@router.get("/all", response_model=responseModels.JSONResponse)
+def get_all():
     content = json.dumps([entity.dict() for entity in sql_session.query(Entity).all()])
     return responseModels.JSONResponse(content=content)
 
 
-@router.get("/entity/roots", response_model=responseModels.JSONResponse)
-def get_sql_entity_roots():
+@router.get("/roots", response_model=responseModels.JSONResponse)
+def get_roots():
     content = json.dumps([entity.dict() for entity in Entity.get_roots()])
     return responseModels.JSONResponse(content=content)
 
 
-@router.post("/entity/create", response_model=responseModels.JSONResponse)
-def create_sql_entity(data: dict):
+@router.post("/create", response_model=responseModels.JSONResponse)
+def create(data: dict):
     try:
         entity = Entity(
             name=data["name"], 

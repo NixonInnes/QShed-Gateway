@@ -5,19 +5,63 @@ from fastapi import APIRouter, HTTPException, Request
 from qshed.client.models import response as responseModels
 from qshed.client.models.misc import MongoQuery
 
-from .. import mongo_client
+from gateway.app import mongo_client, sql_session
+import gateway.app.models as sqlModels
 
 
 router = APIRouter()
 
 
-@router.post("/create", response_model=responseModels.StrResponse)
+@router.get("/database/{collection_db_id}", response_model=responseModels.CollectionDatabaseResponse)
+def get_database(collection_db_id: int):
+    collection_db = sql_session.query(sqlModels.CollectionDatabase).get(collection_db_id)
+    if collection_db is None:
+        return HTTPException(status_code=404, detail="Collection database not found")
+    return responseModels.CollectionDatabaseResponse(
+        content=collection_db.build_model()
+    )
+
+
+@router.get("/database/all", response_model=responseModels.CollectionDatabaseListResponse)
+def get_all_databases(limit: int = 10):
+    collection_dbs = (
+        sql_session
+        .query(sqlModels.CollectionDatabase)
+        .order_by(sqlModels.CollectionDatabase.created_on)
+        .limit(limit)
+        .all()
+    )
+
+@router.get("/database/create", response_model=responseModels.CollectionDatabaseResponse)
 def create_database(database_name: str):
+    if sql_session.query(sqlModels.CollectionDatabase).filter_by(name=database_name).first():
+        return responseModels.CollectionDatabaseResponse(
+            ok=False,
+            content=None,
+            message=f"'{database_name}' already exists"
+        )
+    collection_db = sqlModels.CollectionDatabase.create(database_name)
+    return responseModels.CollectionDatabaseResponse(
+        content=collection_db.build_model()
+    )
+
+
+@router.get("/{collection_id}", response_model=responseModels.CollectionResponse)
+def get(collection_id:int, limit: int = 10, query: Optional[str] = None):
+    collection = sql_session.query(sqlModels.Collection).get(collection_id)
+    if collection is None:
+        return HTTPException(status_code=404, detail="Collection not found")
+    if query:
+        query = json.loads(query)
+    else:
+        query = {}
     try:
-        mongo_client[database_name]
+        return responseModels.CollectionResponse(
+            content=collection.build_model(limit=limit, query=query)
+        )
     except Exception as e:
-        return HTTPException(status_code=500, detail="Unable to create database")
-    return responseModels.StrResponse(content=database_name, message="database created")
+        return HTTPException(status_code=400, detail=str(e))
+
 
 
 @router.get("/list", response_model=responseModels.StrListResponse)

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from config import Config
-from . import influx_client
+from gateway.app import influx_client
 
 
 class TimeseriesQuery:
