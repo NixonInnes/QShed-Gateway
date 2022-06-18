@@ -1,138 +1,115 @@
+import json
 from bson.json_util import dumps as json_dumps
 from typing import Union, Dict, List
 from fastapi import APIRouter, HTTPException, Request
 
-from qshed.client.models import (
-    response as responseModels,
-    data as dataModels
-)
+from qshed.client.models.response import CollectionResponse
+from qshed.client.models.data import Collection, CollectionDatabase
 from qshed.client.models.misc import MongoQuery
 
 from gateway.app import mongo_client, sql_session
-import gateway.app.models as sqlModels
+from gateway.app.models import (
+    Collection as sqlCollection,
+    CollectionDatabase as sqlCollectionDatabase,
+    Entity as sqlEntity
+)
 
 
 router = APIRouter()
 
+@router.get("/get", response_model=CollectionListResponse)
+def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str] = None):
+    if query is None:
+        query = {}
+    else:
+        try:
+            query = json.loads(query)
+        except:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid Collection query: {q}"
+            )
 
-# @router.get("/database/{collection_db_id}", response_model=responseModels.CollectionDatabaseResponse)
-# def get_database(collection_db_id: Union[int, str]):
-#     if type(collection_db_id) is int:
-#         collection_db = sql_session.query(sqlModels.CollectionDatabase).get(collection_db_id)
-#     else:
-#         collection_db = (
-#             sql_session
-#             .query(sqlModels.CollectionDatabase)
-#             .filter_by(name=collection_db_id)
-#             .first()
-#         )
-#     if collection_db is None:
-#         return HTTPException(status_code=404, detail="Collection database not found")
-#     return responseModels.CollectionDatabaseResponse(
-#         content=collection_db.build_model()
-#     )
-
-
-# @router.get("/database/all", response_model=responseModels.CollectionDatabaseListResponse)
-# def get_all_databases(limit: int = 10):
-#     collection_dbs = (
-#         sql_session
-#         .query(sqlModels.CollectionDatabase)
-#         .order_by(sqlModels.CollectionDatabase.created_on)
-#         .limit(limit)
-#         .all()
-#     )
-#     return responseModels.CollectionDatabaseListResponse(
-#         content=[
-#             collection_db.build_model()
-#             for collection_db in collection_dbs
-#         ]
-#     )
-
-# @router.get("/database/create", response_model=responseModels.CollectionDatabaseResponse)
-# def create_database(database_name: str):
-#     if sql_session.query(sqlModels.CollectionDatabase).filter_by(name=database_name).first():
-#         return responseModels.CollectionDatabaseResponse(
-#             ok=False,
-#             content=None,
-#             message=f"'{database_name}' already exists"
-#         )
-#     collection_db = sqlModels.CollectionDatabase.create(database_name)
-#     return responseModels.CollectionDatabaseResponse(
-#         content=collection_db.build_model()
-#     )
+    sql_collections = []
+    for i in id:
+        sql_collection = sql_session.query(sqlCollection).get(i)
+        if sql_collection is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Invalid Collection id: {i}"
+            )
+        sql_collections.append(sql_collection)
+    return CollectionListResponse(
+        data=[collection.build_model(query=query, limit=limit) for collection in sql_collections]
+    )
 
 
-# @router.get("/{collection_id}", response_model=responseModels.CollectionResponse)
-# def get(collection_id: Union[int, str], limit: int = 10, query: Optional[str] = None):
+@router.get("/database/get", response_model=CollectionDatabaseListResponse)
+def get_database(id: List[int] = Query(default=[])):
+    sql_collection_dbs = []
+    for i in id:
+        sql_collection_db = sql_session.query(sqlCollectionDatabase).get(i)
+        if sql_collection_db is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Invalid Collection Database id: {i}"
+            )
+        sql_collection_dbs.append(sql_collection_db)
+    return CollectionDatabaseListResponse(
+        data=[collection_db.build_model() for collection_db in sql_collection_dbs]
+    )
 
-#     if type(collection_id) is int:
-#         collection = sql_session.query(sqlModels.Collection).get(collection_id)
-#     else:
-#         collection = sql_session.query(sqlModels.Collection).filter_by(name=collection_id).first()
 
-#     if collection is None:
-#         return HTTPException(status_code=404, detail="Collection not found")
+@router.post("/create", response_model=CollectionResponse)
+def create(collection: Collection):
+    if collection.entity:
+        sql_entity = sql_session.query(sqlEntity).get(collection.entity)
+        if sql_entity is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Invalid Entity id: {collection.entity}"
+            )
+    else:
+        sql_entity = None
+
+    sql_collection_db = sql_session.query(sqlCollectionDatabase).get(collection.database)
+    if sql_collection_db is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Invalid Collection Database id: {collection.database}"
+        )
+
+    sql_collection = sqlCollection.create(
+        name=collection.name,
+        database=sql_collection_db
+    )
     
-#     if query:
-#         query = json.loads(query)
-#     else:
-#         query = {}
-    
-#     try:
-#         return responseModels.CollectionResponse(
-#             content=collection.build_model(limit=limit, query=query)
-#         )
-#     except Exception as e:
-#         return HTTPException(status_code=400, detail=str(e))
+    if collection.data:
+        sql_collection.query.insert_one(collection.data)
+
+    return CollectionResponse(
+        data=sql_collection.build_model()
+    )
 
 
-# @router.get("/database/{collection_db_id}/all", response_model=responseModels.CollectionListResponse)
-# def get_all_from_database(collection_db_id: int, limit: int = 10, query: Optional[str] = None):
-#     collection_db = sql_session.query(sqlModels.CollectionDatabase).get(collection_db_id)
-#     if collection_db is None:
-#         return HTTPException(status_code=404, detail="Collection database not found")
-#     if query:
-#         query = json.loads(query)
-#     else:
-#         query = {}
-#     try:
-#         return responseModels.CollectionListResponse(
-#         content=[
-#             collection.build_model(limit=limit, query=query)
-#             for collection in collection_db.collections
-#         ]
-#     )
-#     except Exception as e:
-#         return HTTPException(status_code=400, detail=str(e))
-    
-
-# @router.get(
-#     "/{database_name}/{collection_name}/get", response_model=responseModels.JSONResponse
-# )
-# def get_collection(database_name: str, collection_name: str, request: Request):
-#     return get_limited_collection(database_name, collection_name, 10)
-
-
-# @router.get(
-#     "/{database_name}/{collection_name}/get/{limit}",
-#     response_model=responseModels.JSONResponse,
-# )
-# def get_limited_collection(
-#     database_name: str, collection_name: str, limit: int, request: Request
-# ):
-#     query = request.query_params._dict
-#     try:
-#         db = mongo_client[database_name]
-#         col = db[collection_name]
-#     except:
-#         return HTTPException(status_code=404, detail="Database/collection not found")
-
-#     data = json_dumps(col.find(query).sort("$natural", -1).limit(limit))
-#     return responseModels.JSONResponse(
-#         content=data,
-#         message=f"{database_name}/{collection_name} content (limit={limit})",
-#     )
+@router.post("/database/create", response_model=CollectionDatabaseResponse)
+def create_database(collection_db: CollectionDatabase):
+    if (
+        sql_session
+        .query(sqlCollectionDatabase)
+        .filter_by(name=collection_db.name)
+        .first()
+    ) is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collection Database name already exists: {collection_db.name}"
+        )
+    sql_collection_db = sqlCollectionDatabase.create(
+        name=collection_db.name
+    )
+    return CollectionDatabaseResponse(
+        data=sql_collection_db.build_model()
+    )
 
 
 # @router.post(

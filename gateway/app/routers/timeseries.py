@@ -89,7 +89,7 @@ async def add(timeseries_request: Request):
             .get(timeseries.id)
         )
         if sql_timeseries is None:
-            return HTTPException(
+            raise HTTPException(
                 status_code=404, 
                 detail=f"Invalid Timeseries id: {timeseries.id}"
             )
@@ -101,7 +101,7 @@ async def add(timeseries_request: Request):
             .first()
         )
         if sql_timeseries is None:
-            return HTTPException(
+            raise HTTPException(
                 status_code=404, 
                 detail=f"Invalid Timeseries name: {timeseries.name}"
             )

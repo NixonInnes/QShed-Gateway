@@ -13,7 +13,6 @@ from . import Base
 
 class CollectionDatabase(Base):
     name = Column(String, index=True)
-
     collections = relationship("Collection", backref="database")
 
     @classmethod
@@ -37,7 +36,6 @@ class CollectionDatabase(Base):
 
 class Collection(Base):
     name = Column(String, index=True)
-
     database_id = Column(Integer, ForeignKey("collectiondatabase.id"))
 
     def build_model(self, query={}, limit=10):
@@ -48,10 +46,14 @@ class Collection(Base):
             query=query,
             limit=limit,
             data=(
-                mongo_client[self.database.name][self.name]
+                self.query
                 .find(query)
                 .sort("$natural", -1)
                 .limit(limit)
             )
         )
+
+    @property
+    def query(self):
+        return mongo_client[self.database.name][self.name]
 
