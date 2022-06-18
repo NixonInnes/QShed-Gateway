@@ -2,6 +2,8 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime
 from sqlalchemy.ext.declarative import declared_attr
 
+from gateway.app import sql_session
+
 class SQLBase:
     @declared_attr
     def __tablename__(cls):
@@ -9,6 +11,14 @@ class SQLBase:
 
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    @classmethod
+    def create(cls, **kwargs):
+        instance = cls(**kwargs)
+        sql_session.add(instance)
+        sql_session.commit()
+        return instance
+
 
 
 from sqlalchemy.orm import declarative_base

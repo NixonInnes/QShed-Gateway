@@ -10,6 +10,7 @@ from . import Base
 
 
 class Entity(Base):
+    id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
     data = Column(String)
     type = Column(Integer, default=0)

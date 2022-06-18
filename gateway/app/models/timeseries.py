@@ -22,5 +22,5 @@ class Timeseries(Base):
             name=self.name,
             start=start,
             end=end,
-            data=self.query(start=start, end=end)
+            data=self.query.get_points(start=start, end=end)
         )

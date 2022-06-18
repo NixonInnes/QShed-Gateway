@@ -15,7 +15,7 @@ if os.path.exists(env_file):
         load_dotenv(env_file)
         logger.info(f"Loaded environment file: {env_file}")
     except Exception as e:
-        logger.warn(f"{e}\nUnable to load environment file: {env_file}")
+        logger.warn(f"{e} - Unable to load environment file: {env_file}")
 
 logging.getLogger().setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 

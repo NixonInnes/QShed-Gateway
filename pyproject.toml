@@ -13,7 +13,7 @@ influxdb-client = "^1.28.0"
 httpx = "^0.22.0"
 SQLAlchemy = "^1.4.36"
 python-dotenv = "^0.20.0"
-qshed-client = {path = "packages/qshed_client-0.1.2-py3-none-any.whl"}
+aiosqlite = "^0.17.0"
 
 [tool.poetry.dev-dependencies]
 
