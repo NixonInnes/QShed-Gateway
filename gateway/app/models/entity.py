@@ -23,9 +23,10 @@ class Entity(Base):
     collection_id = Column(Integer, ForeignKey("collection.id"))
     collection = relationship("Collection", backref=backref("entity", uselist=False))
 
-    @property
-    def display_name(self):
-        if self.parent:
+    def get_relative_name(self, full=False):
+        if self.parent is not None:
+            if full:
+                return f"{self.parent.get_relative_name(full=full)}:{self.name}"
             return f"{self.parent.name}:{self.name}"
         return self.name
 

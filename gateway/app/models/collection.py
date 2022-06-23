@@ -19,9 +19,9 @@ class CollectionDatabase(Base):
     def create(cls, name, **kwargs):
         mongo_client[name]
         collection_db = cls(name=name, **kwargs)
-        sql_session.add(colletion_db)
+        sql_session.add(collection_db)
         sql_session.commit()
-        return colletion_db
+        return collection_db
 
 
     def build_model(self):
@@ -45,7 +45,7 @@ class Collection(Base):
             database=self.database_id,
             query=query,
             limit=limit,
-            data=(
+            data=list(
                 self.query
                 .find(query)
                 .sort("$natural", -1)

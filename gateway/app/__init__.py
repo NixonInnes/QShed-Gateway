@@ -25,7 +25,7 @@ def create_app():
     app.include_router(main.router)
     app.include_router(scheduler.router, prefix="/scheduler")
     app.include_router(entity.router, prefix="/entity")
-    app.include_router(collection.router, prefix="/colection")
+    app.include_router(collection.router, prefix="/collection")
     app.include_router(timeseries.router, prefix="/timeseries")
 
     return app

@@ -1,11 +1,15 @@
 import json
 from bson.json_util import dumps as json_dumps
-from typing import Union, Dict, List
-from fastapi import APIRouter, HTTPException, Request
+from typing import Union, Dict, List, Optional
+from fastapi import APIRouter, HTTPException, Request, Query
 
-from qshed.client.models.response import CollectionResponse
+from qshed.client.models.response import (
+    CollectionResponse, 
+    CollectionListResponse,
+    CollectionDatabaseResponse,
+    CollectionDatabaseListResponse
+)
 from qshed.client.models.data import Collection, CollectionDatabase
-from qshed.client.models.misc import MongoQuery
 
 from gateway.app import mongo_client, sql_session
 from gateway.app.models import (
@@ -18,7 +22,7 @@ from gateway.app.models import (
 router = APIRouter()
 
 @router.get("/get", response_model=CollectionListResponse)
-def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str] = None):
+async def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str] = None):
     if query is None:
         query = {}
     else:
@@ -45,7 +49,7 @@ def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str]
 
 
 @router.get("/database/get", response_model=CollectionDatabaseListResponse)
-def get_database(id: List[int] = Query(default=[])):
+async def get_database(id: List[int] = Query(default=[])):
     sql_collection_dbs = []
     for i in id:
         sql_collection_db = sql_session.query(sqlCollectionDatabase).get(i)
@@ -61,7 +65,7 @@ def get_database(id: List[int] = Query(default=[])):
 
 
 @router.post("/create", response_model=CollectionResponse)
-def create(collection: Collection):
+async def create(collection: Collection):
     if collection.entity:
         sql_entity = sql_session.query(sqlEntity).get(collection.entity)
         if sql_entity is None:
@@ -91,9 +95,14 @@ def create(collection: Collection):
         data=sql_collection.build_model()
     )
 
+# @router.post("/database/create")
+# async def test(r: Request):
+#     r = await r.json()
+#     breakpoint()
+#     return Response(content=r, media_type="application/json")
 
 @router.post("/database/create", response_model=CollectionDatabaseResponse)
-def create_database(collection_db: CollectionDatabase):
+async def create_database(collection_db: CollectionDatabase):
     if (
         sql_session
         .query(sqlCollectionDatabase)
