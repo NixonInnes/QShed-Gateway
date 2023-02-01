@@ -1,19 +1,18 @@
-import json
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
+from __future__ import annotations
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 import qshed.client.models.data as dataModels
-import qshed.client.models.response as responseModels
 
 from gateway.app import mongo_client, sql_session
-from gateway.app.queries import TimeseriesQuery
 
 from . import Base
 
 
 class CollectionDatabase(Base):
-    name = Column(String, index=True)
-    collections = relationship("Collection", backref="database")
+    name: Mapped[str] = mapped_column(index=True)
+    collections: Mapped[list["Collection"]] = relationship(backref="database")
 
     @classmethod
     def create(cls, name, **kwargs):
@@ -23,20 +22,17 @@ class CollectionDatabase(Base):
         sql_session.commit()
         return collection_db
 
-
     def build_model(self):
         return dataModels.CollectionDatabase(
             id=self.id,
             name=self.name,
-            collections=[
-                collection.id for collection in self.collections
-            ]
+            collections=[collection.id for collection in self.collections],
         )
 
 
 class Collection(Base):
-    name = Column(String, index=True)
-    database_id = Column(Integer, ForeignKey("collectiondatabase.id"))
+    name: Mapped[str] = mapped_column(index=True)
+    database_id: Mapped[int] = mapped_column(ForeignKey("collectiondatabase.id"))
 
     def build_model(self, query={}, limit=10):
         return dataModels.Collection(
@@ -45,15 +41,9 @@ class Collection(Base):
             database=self.database_id,
             query=query,
             limit=limit,
-            data=list(
-                self.query
-                .find(query)
-                .sort("$natural", -1)
-                .limit(limit)
-            )
+            data=list(self.data.find(query).sort("$natural", -1).limit(limit)),
         )
 
     @property
-    def query(self):
+    def data(self):
         return mongo_client[self.database.name][self.name]
-

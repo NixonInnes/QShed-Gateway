@@ -11,11 +11,14 @@ fastapi = "^0.75.2"
 uvicorn = "^0.17.6"
 influxdb-client = "^1.28.0"
 httpx = "^0.22.0"
-SQLAlchemy = "^1.4.36"
 python-dotenv = "^0.20.0"
 aiosqlite = "^0.17.0"
+psycopg2 = "^2.9.5"
+pandas = "^1.5.2"
+SQLAlchemy = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
+black = "^22.10.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

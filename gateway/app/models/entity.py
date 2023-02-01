@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 import json
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from typing import Optional
+from sqlalchemy import Column, Table, ForeignKey
+from sqlalchemy.orm import Mapped, relationship, backref, mapped_column
+from sqlalchemy.orm.collections import attribute_keyed_dict
+from sqlalchemy.ext.associationproxy import association_proxy, AssociationProxy
+from sqlalchemy.ext.associationproxy import 
 
 import qshed.client.models.data as dataModels
 
@@ -9,40 +15,105 @@ from gateway.app import sql_session
 from . import Base
 
 
+related_entities_table = Table(
+    "related_entities",
+    Base.metadata,
+    Column("entity_1_id", ForeignKey("entity.id"), primary_key=True),
+    Column("entity_2_id", ForeignKey("entity.id"), primary_key=True),
+    Column("type", ForeignKey("relationshiptype.id"))
+)
+
+
+class RelationshipType(Base):
+    name: Mapped[str] = mapped_column(index=True)
+
+
 class Entity(Base):
-    id = Column(Integer, primary_key=True)
-    name = Column(String, index=True)
-    data = Column(String)
-    type = Column(Integer, default=0)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
 
-    parent_id = Column(Integer, ForeignKey("entity.id"))
-    children = relationship("Entity", backref=backref("parent", remote_side=[id]))
+    type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("entitytype.id"))
+    type: Mapped[Optional["EntityType"]] = relationship()
 
-    timeseries_id = Column(Integer, ForeignKey("timeseries.id"))
-    timeseries = relationship("Timeseries", backref=backref("entity", uselist=False))
-    collection_id = Column(Integer, ForeignKey("collection.id"))
-    collection = relationship("Collection", backref=backref("entity", uselist=False))
+    parent_id: Mapped[Optional[int]] = mapped_column(ForeignKey("entity.id"))
+    
+    children: Mapped[list["Entity"]] = relationship(
+        backref=backref("parent", remote_side=[id])
+    )
 
-    def get_relative_name(self, full=False):
-        if self.parent is not None:
-            if full:
-                return f"{self.parent.get_relative_name(full=full)}:{self.name}"
-            return f"{self.parent.name}:{self.name}"
-        return self.name
+    related_entities: Mapped[dict[str, EntityAssociation]] = relationship(
+        foreign_keys=[id],
+        collection_class=attribute_keyed_dict("relationship_type"),
+        cascade="all, delete-orphan"
+    )
 
-    @classmethod
-    def get_roots(cls):
-        return sql_session.query(cls).filter(cls.parent==None).all()
+    related: AssociationProxy[dict[str, "Entity"]] = association_proxy(
+        "related_entities",
+        "entity",
+        creator=lambda rel, ent: EntityAssociation(relationship_type=rel, entity=ent)
+    )
+    
 
-    def build_model(self):
-        return dataModels.Entity(
-            id=self.id,
-            name=self.name,
-            data_=self.data,
-            type=self.type,
-            parent=self.parent.id if self.parent else None,
-            children=[child.id for child in self.children],
-            timeseries=self.timeseries_id,
-            collection=self.collection_id
-        )
+    timeseries_id: Mapped[Optional[int]] = mapped_column(ForeignKey("timeseries.id"))
+    timeseries: Mapped[Optional["Timeseries"]] = relationship(
+        backref=backref("entity", uselist=False)
+    )
 
+    collection_id: Mapped[Optional[int]] = mapped_column(ForeignKey("collection.id"))
+    collection: Mapped[Optional["Collection"]] = relationship(
+        backref=backref("entity", uselist=False)
+    )
+
+    def __repr__(self):
+        s = f"<Entity(id={self.id}"
+        if self.type is not None:
+            s += f", type='{self.type.name}'"
+        else:
+            s += f", type=None"
+
+        if self.parent:
+            s += f", parent={self.parent.id}"
+
+        if self.children:
+            s += f", children={[c.id for c in self.children]}"
+
+        if self.related:
+            s += f", related={[r.id for r in self.related]}"
+
+        if self.timeseries:
+            s += f", timeseries={self.timeseries.name}"
+
+        if self.collection:
+            s += f", collection={self.collection.name}"
+
+        s += ")>"
+        return s
+
+
+class EntityAssociation(Base):
+    entity_1_id: Mapped[int] = mapped_column(ForeignKey("entity.id"), primary_key=True)
+    entity_2_id: Mapped[int] = mapped_column(ForeignKey("entity.id"), primary_key=True)
+    relationship_type: Mapped[str]
+
+    entity_1: Mapped[Entity] = relationship(
+        back_populates="entity_associations"
+    )
+
+
+class EntityType(Base):
+    name: Mapped[str] = mapped_column(index=True)
+
+
+class Property(Base):
+    name: Mapped[str] = mapped_column(index=True)
+    value: Mapped[str]
+
+    entity_id: Mapped[int] = mapped_column(ForeignKey("entity.id"))
+    entity: Mapped["Entity"] = relationship(backref="properties")
+
+    type_id: Mapped[int] = mapped_column(ForeignKey("propertytype.id"))
+    type: Mapped["PropertyType"] = relationship()
+
+
+class PropertyType(Base):
+    name: Mapped[str] = mapped_column(index=True)

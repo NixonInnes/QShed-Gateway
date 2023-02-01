@@ -37,8 +37,7 @@ class TimeseriesQuery:
         if len(df) < 1:
             return df
         return (
-            df
-            .drop(["result", "table"], axis=1)
+            df.drop(["result", "table"], axis=1)
             .rename(columns={"_time": "time", "v": self.name})
             .set_index("time")
         )
@@ -53,12 +52,14 @@ class TimeseriesQuery:
         )
 
     def add_points(self, df):
-        df = df.iloc[:,[0]].copy()
+        df = df.iloc[:, [0]].copy()
         df.columns = ["v"]
         self.__write_api.write(
             Config.INFLUX_BUCKET,
-            Config.INFLUX_ORG, 
-            df, data_frame_measurement_name=self.name)
+            Config.INFLUX_ORG,
+            df,
+            data_frame_measurement_name=self.name,
+        )
 
     def get_points(self, start=timedelta(days=-1), end=None):
         if not end:

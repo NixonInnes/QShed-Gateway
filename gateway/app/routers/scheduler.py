@@ -1,10 +1,7 @@
 import httpx
 from fastapi import APIRouter
 
-from qshed.client.models import (
-    response as responseModels,
-    data as dataModels
-)
+from qshed.client.models import response as responseModels, data as dataModels
 
 from config import Config
 

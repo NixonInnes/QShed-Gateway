@@ -1,16 +1,17 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, DateTime
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declared_attr
 
-from gateway.app import sql_session
+from gateway.app import sql_session, sql_engine
+
 
 class SQLBase:
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
     @classmethod
     def create(cls, **kwargs):
@@ -19,16 +20,17 @@ class SQLBase:
         sql_session.commit()
         return instance
 
+    @classmethod
+    def query(cls):
+        return sql_session.query(cls)
 
-
-from sqlalchemy.orm import declarative_base
 
 Base = declarative_base(cls=SQLBase)
 
 
 from .collection import CollectionDatabase, Collection
-from .entity import Entity
+from .entity import Entity, EntityType, RelationshipType, Property, PropertyType
 from .timeseries import Timeseries
-from gateway.app import sql_engine
+from .datamodel_definition import DataModelDefinition, DataModelDefinitionAttribute
 
 Base.metadata.create_all(sql_engine)

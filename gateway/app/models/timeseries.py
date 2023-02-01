@@ -1,6 +1,6 @@
 import json
-from sqlalchemy import Column, String
-from sqlalchemy.orm import declarative_base
+
+from sqlalchemy.orm import Mapped, mapped_column
 
 import qshed.client.models.data as dataModels
 
@@ -10,10 +10,10 @@ from . import Base
 
 
 class Timeseries(Base):
-    name = Column(String, index=True)
+    name: Mapped[str] = mapped_column(index=True)
 
     @property
-    def query(self):
+    def data(self):
         return TimeseriesQuery(self.name)
 
     def build_model(self, start, end):
@@ -22,5 +22,5 @@ class Timeseries(Base):
             name=self.name,
             start=start,
             end=end,
-            data=self.query.get_points(start=start, end=end)
+            data=self.data.get_points(start=start, end=end),
         )

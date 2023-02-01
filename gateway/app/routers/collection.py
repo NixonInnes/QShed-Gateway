@@ -4,10 +4,10 @@ from typing import Union, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request, Query
 
 from qshed.client.models.response import (
-    CollectionResponse, 
+    CollectionResponse,
     CollectionListResponse,
     CollectionDatabaseResponse,
-    CollectionDatabaseListResponse
+    CollectionDatabaseListResponse,
 )
 from qshed.client.models.data import Collection, CollectionDatabase
 
@@ -15,14 +15,17 @@ from gateway.app import mongo_client, sql_session
 from gateway.app.models import (
     Collection as sqlCollection,
     CollectionDatabase as sqlCollectionDatabase,
-    Entity as sqlEntity
+    Entity as sqlEntity,
 )
 
 
 router = APIRouter()
 
+
 @router.get("/get", response_model=CollectionListResponse)
-async def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str] = None):
+async def get(
+    id: List[int] = Query(default=[]), limit: int = 10, query: Optional[str] = None
+):
     if query is None:
         query = {}
     else:
@@ -30,21 +33,20 @@ async def get(id: List[int] = Query(default=[]), limit: int = 10, query: Optiona
             query = json.loads(query)
         except:
             raise HTTPException(
-                status_code=400,
-                detail=f"Invalid Collection query: {q}"
+                status_code=400, detail=f"Invalid Collection query: {q}"
             )
 
     sql_collections = []
     for i in id:
         sql_collection = sql_session.query(sqlCollection).get(i)
         if sql_collection is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Invalid Collection id: {i}"
-            )
+            raise HTTPException(status_code=404, detail=f"Invalid Collection id: {i}")
         sql_collections.append(sql_collection)
     return CollectionListResponse(
-        data=[collection.build_model(query=query, limit=limit) for collection in sql_collections]
+        data=[
+            collection.build_model(query=query, limit=limit)
+            for collection in sql_collections
+        ]
     )
 
 
@@ -55,8 +57,7 @@ async def get_database(id: List[int] = Query(default=[])):
         sql_collection_db = sql_session.query(sqlCollectionDatabase).get(i)
         if sql_collection_db is None:
             raise HTTPException(
-                status_code=404,
-                detail=f"Invalid Collection Database id: {i}"
+                status_code=404, detail=f"Invalid Collection Database id: {i}"
             )
         sql_collection_dbs.append(sql_collection_db)
     return CollectionDatabaseListResponse(
@@ -70,30 +71,29 @@ async def create(collection: Collection):
         sql_entity = sql_session.query(sqlEntity).get(collection.entity)
         if sql_entity is None:
             raise HTTPException(
-                status_code=404,
-                detail=f"Invalid Entity id: {collection.entity}"
+                status_code=404, detail=f"Invalid Entity id: {collection.entity}"
             )
     else:
         sql_entity = None
 
-    sql_collection_db = sql_session.query(sqlCollectionDatabase).get(collection.database)
+    sql_collection_db = sql_session.query(sqlCollectionDatabase).get(
+        collection.database
+    )
     if sql_collection_db is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Invalid Collection Database id: {collection.database}"
+            detail=f"Invalid Collection Database id: {collection.database}",
         )
 
     sql_collection = sqlCollection.create(
-        name=collection.name,
-        database=sql_collection_db
+        name=collection.name, database=sql_collection_db
     )
-    
+
     if collection.data:
         sql_collection.query.insert_one(collection.data)
 
-    return CollectionResponse(
-        data=sql_collection.build_model()
-    )
+    return CollectionResponse(data=sql_collection.build_model())
+
 
 # @router.post("/database/create")
 # async def test(r: Request):
@@ -101,24 +101,20 @@ async def create(collection: Collection):
 #     breakpoint()
 #     return Response(content=r, media_type="application/json")
 
+
 @router.post("/database/create", response_model=CollectionDatabaseResponse)
 async def create_database(collection_db: CollectionDatabase):
     if (
-        sql_session
-        .query(sqlCollectionDatabase)
+        sql_session.query(sqlCollectionDatabase)
         .filter_by(name=collection_db.name)
         .first()
     ) is not None:
         raise HTTPException(
             status_code=400,
-            detail=f"Collection Database name already exists: {collection_db.name}"
+            detail=f"Collection Database name already exists: {collection_db.name}",
         )
-    sql_collection_db = sqlCollectionDatabase.create(
-        name=collection_db.name
-    )
-    return CollectionDatabaseResponse(
-        data=sql_collection_db.build_model()
-    )
+    sql_collection_db = sqlCollectionDatabase.create(name=collection_db.name)
+    return CollectionDatabaseResponse(data=sql_collection_db.build_model())
 
 
 # @router.post(
